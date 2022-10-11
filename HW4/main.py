@@ -11,6 +11,7 @@ Example command:
 python3 main.py --train data/lyrics/taylor_swift.txt --test data/lyrics/test_lyrics.txt --n 3 --alpha 0
 """
 
+from collections import defaultdict
 from utils import *
 from lm import *
         
@@ -62,12 +63,16 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Your n-gram language model.")
     parser.add_argument('--train', type=str, required=True,
-            help='Location of train file (.txt format)')
+            help='Location of train file (.txt format)',
+            default='data/sample.txt')
     parser.add_argument('--test', s=str, required=True,
-            help='Location of test file (.txt format)')
+            help='Location of test file (.txt format)',
+            default='data/sampeld.txt')
     parser.add_argument('--n', type=int, required=True,
-            help='Order of n-gram model to create (i.e. 1 for unigram, 2 for bigram, etc.)')
+            help='Order of n-gram model to create (i.e. 1 for unigram, 2 for bigram, etc.)',
+            default=3)
     parser.add_argument('--alpha', type=int, default=1,
-            help='Value for laplace smoothing')
+            help='Value for laplace smoothing',
+            default=0)
     args = parser.parse_args()
     main(args)

@@ -52,7 +52,15 @@ def get_ngrams(list_of_words, n):
         n_grams: List[Tuple]
             Returns a list containing n-gram tuples
     """
-    return NotImplemented
+
+    list_zip = []
+    for i in range(n-1):
+        list_zip.append(list_of_words[i:-n+i+1])
+    list_zip.append(list_of_words[n-1:])
+    ngram_zip = zip(*list_zip)
+    n_grams = [i for i in ngram_zip]
+
+    return n_grams
 
 #######################################
 # TO-DO: LanguageModel()
@@ -74,30 +82,47 @@ class LanguageModel():
         Other required parameters:
             self.vocab: vocabulary dict with counts
             self.model: n-gram language model, i.e., n-gram dict with probabilties
-            self.n_grams_counts: Count of all the n-grams present in the training data
-            self.prefix_counts: Count of all the corresponding n-1 grams present in the training data
+            self.n_grams_counts: Frequency count for each of the n-grams present in the training data
+            self.prefix_counts: Frequency count of all the corresponding n-1 grams present in the training data
         """
         self.n = n
         self.train_data = train_data
         self.tokens = flatten(self.train_data)
-        
         self.n_grams_counts = None
         self.prefix_counts = None
         self.vocab  = Counter(self.tokens)
         self.alpha = alpha
         self.model = self.build()
-        
+
+    #TODO:
     def get_smooth_probabilites(self,n_gram):
         """
-        Returns the smoothed probability of the ngram, using Laplace Smoothing
+        Returns the smoothed probability of a single ngram, using Laplace Smoothing. Remember to handle the special case of n=1
+        Use the class variables we defined in the build function. It is suggested to implement the build function before this one.
         """
-        return NotImplemented
+        prob = Counter(n_gram)
+        for item, count in prob.items():
+            prob[item] = (prob[item]+self.alpha)/(self.prefix_counts[item[0]]+self.alpha*len(self.vocab))
+        
+        return prob
     
+    #TODO:
     def build(self):
         """
-        Returns a n-gram (could be a unigram) dict with probabilities
+        Returns a n-gram (could be a unigram) dict with n-gram tuples as keys and probabilities as values. 
+        It could be a unigram model as well
         """
-        return NotImplemented
+        
+        # TODO: Get the n-grams from the training data using the previously defined methods
+        n_grams = get_ngrams(self.tokens, self.n)
+        # TODO: Define the class variables n_grams_counts and prefix_counts 
+        self.n_grams_counts = Counter(n_grams)
+        self.prefix_counts = self.vocab
+
+        # TODO Get the Probabilities using the get_smooth_probabilities
+        prob = self.get_smooth_probabilites(n_grams)
+
+        return prob
 
 
 #######################################
