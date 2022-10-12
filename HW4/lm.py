@@ -15,6 +15,7 @@ Complete the LanguageModel class and other TO-DO methods.
 #######################################
 from utils import *
 from collections import Counter
+from collections import defaultdict
 from itertools import product
 import argparse
 import random
@@ -54,13 +55,11 @@ def get_ngrams(list_of_words, n):
     """
 
     list_zip = []
-    for i in range(n-1):
-        list_zip.append(list_of_words[i:-n+i+1])
-    list_zip.append(list_of_words[n-1:])
-    ngram_zip = zip(*list_zip)
-    n_grams = [i for i in ngram_zip]
+    for i in range(len(list_of_words) - n + 1):
+        list_zip.append(tuple(list_of_words[i:i+n]))
 
-    return n_grams
+    return list_zip
+
 
 #######################################
 # TO-DO: LanguageModel()
@@ -94,17 +93,19 @@ class LanguageModel():
         self.alpha = alpha
         self.model = self.build()
 
-    #TODO:
     def get_smooth_probabilites(self,n_gram):
         """
         Returns the smoothed probability of a single ngram, using Laplace Smoothing. Remember to handle the special case of n=1
         Use the class variables we defined in the build function. It is suggested to implement the build function before this one.
         """
-        prob = Counter(n_gram)
-        for item, count in prob.items():
-            prob[item] = (prob[item]+self.alpha)/(self.prefix_counts[item[0]]+self.alpha*len(self.vocab))
+        if self.n == 1:
+            prob = (self.n_grams_counts[n_gram]+self.alpha)  /   (len(self.tokens)+self.alpha*len(self.vocab))
+        else:
+            denominator = self.prefix_counts[n_gram[:-1]]
+            prob = (self.n_grams_counts[n_gram]+self.alpha)/(denominator+self.alpha*len(self.vocab))
         
         return prob
+    
     
     #TODO:
     def build(self):
@@ -115,14 +116,18 @@ class LanguageModel():
         
         # TODO: Get the n-grams from the training data using the previously defined methods
         n_grams = get_ngrams(self.tokens, self.n)
+        n_1_grams = get_ngrams(self.tokens, self.n - 1)
         # TODO: Define the class variables n_grams_counts and prefix_counts 
         self.n_grams_counts = Counter(n_grams)
-        self.prefix_counts = self.vocab
+        self.prefix_counts = Counter(n_1_grams)
 
         # TODO Get the Probabilities using the get_smooth_probabilities
-        prob = self.get_smooth_probabilites(n_grams)
+        model = {}
+        for item, count in self.n_grams_counts.items():
+            prob = self.get_smooth_probabilites(item)
+            model[item] = prob
 
-        return prob
+        return model
 
 
 #######################################
@@ -144,8 +149,28 @@ def perplexity(lm, test_data):
     float
         Calculated perplexity value
     """
-    return NotImplemented
-
+    #math.exp(sum(math.log()))
+    # TODO Flatten and get the n-grams
+    n_grams = get_ngrams(flatten(test_data), lm.n)
+    
+    # TODO Calculate the Perplexity over all the test n-grams
+    probs = lm.model
+    log_sum = 0
+    for item in n_grams:
+        try:
+            if probs[item] != 0:
+                log_sum += math.log(probs[item])
+        except:
+            if lm.n == 1:
+                prob = (lm.alpha)/(len(lm.tokens)+lm.alpha*len(lm.vocab))
+            else:
+                denominator = lm.prefix_counts[item[:-1]]
+                prob = (lm.alpha)/(denominator+lm.alpha*len(lm.vocab))
+            
+            log_sum += math.log(prob)
+        
+    perplexity = math.exp(-log_sum/len(n_grams))
+    return perplexity
 
 ###############################################
 # Method: Most Probable Candidates [Don't Edit]
